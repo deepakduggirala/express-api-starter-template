@@ -1,0 +1,9 @@
+{
+  "express": {
+    "port": 3030,
+    "host": "localhost"
+  },
+  "logger": {
+    "level": "debug"
+  }
+}
