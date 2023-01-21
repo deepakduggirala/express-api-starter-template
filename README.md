@@ -1,6 +1,7 @@
 # Express API Starter Template
 
 Features:
+- Uses [pnpm](https://pnpm.io/)
 - global error handler
 - async error handler
 - body parser, cookie parser, compression
