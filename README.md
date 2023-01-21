@@ -7,18 +7,19 @@ Features:
 - body parser, cookie parser, compression
 - logger
     - log incoming requests
-    - multi-level logger: ex: `logger.info()`
+    - app activity and debug logger
 - hierarchical configuration
 - CORS
+- Request validation using [express-validator](https://express-validator.github.io/docs/)
 
-Developer Exprience
+Developer Experience (DX):
 - Auto reload:  `nodemon index.js`
 - Linting
-    - auto highligt linting errors
+    - auto highlight linting errors
     - format on save
 - Consistent Coding styles with editorconfig
 
-Production deployment:
+Production Deployment:
 - pm2
 
 Assumptions:
@@ -97,7 +98,7 @@ function errorHandler(err, req, res, next) {
 ```
 - Logs error to console
 - send actual message to client only if `err.expose` is true otherwise send a generic Internal server error.  For http errors such as (`throw createError(400, 'foo bar')`), the client receives `{"message":"foo bar"}` with status code to 400.
-- For non http errors such as  `throw new Error('business logic error')`, only the `err.message` is set others are not. For such error, this handler will send a generic message. Client's will not see `business logic error` in thier response object.
+- For non http errors such as  `throw new Error('business logic error')`, only the `err.message` is set others are not. For such error, this handler will send a generic message. Client's will not see `business logic error` in their response object.
 - Does not log to console for 404 errors
 
 #### 404 handler
@@ -156,7 +157,7 @@ Use Eslint
 pnpm install eslint eslint-plugin-import eslint-config-airbnb-base --save-dev
 ```
 
-Configure: create a `.eslintc` file with the below content
+Configure: create a `.eslintrc` file with the below content
 
 ```json
 {
@@ -203,6 +204,56 @@ Configurations are stored in [configuration files](https://github.com/node-confi
 
 
 create `default.json`, `production.json`, `custom-environment-variables.json` files in `./config/` directory.
-- precdence of config: command line > environment > {NODE_ENV}.json > default.json
+- precedence of config: command line > environment > {NODE_ENV}.json > default.json
 
 The properties to read and override from environment is defined in `custom-environment-variables.json`
+
+
+
+### Request Validation
+
+Use [express-validator](https://express-validator.github.io/docs/)
+
+```bash
+pnpm install express-validator
+```
+
+Using the `validator` higher order function, the error checking code is factored out from the route specific middleware functions.
+
+```javascript
+app.post(
+  '/user',
+  body('username').isEmail(),
+  body('password').isLength({ min: 5 }),
+  (req, res) => {
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    User.create({
+      username: req.body.username,
+      password: req.body.password,
+    }).then(user => res.json(user));
+  },
+);
+```
+
+becomes
+
+```javascript
+const validator = require('middleware/validator')
+app.post(
+  '/user',
+  body('username').isEmail(),
+  body('password').isLength({ min: 5 }),
+  validator(async (req, res) => {
+    const user = await User.create({
+      username: req.body.username,
+      password: req.body.password,
+    });
+    res.json(user);
+  },
+));
+```

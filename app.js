@@ -8,7 +8,7 @@ const cors = require('cors');
 // global.__basedir = __dirname;
 
 const indexRouter = require('./routes/index');
-const errorMiddlewares = require('./middlewares/errors');
+const { notFound, errorHandler } = require('./middleware/errors');
 
 // Register application
 const app = express();
@@ -16,7 +16,7 @@ const app = express();
 // request logger - https://github.com/expressjs/morgan
 app.use(requestLogger('dev'));
 
-// request parsing middlewares
+// request parsing middleware
 app.use(express.json({ limit: '50mb' }));
 
 // extended: false -> use querystring instead of qs library to parse urlencoded query string
@@ -37,9 +37,9 @@ app.use(cors());
 app.use('/', indexRouter);
 
 // handle unknown routes
-app.use(errorMiddlewares.notFound);
+app.use(notFound);
 
 // pass any unhandled errors to the error handler
-app.use(errorMiddlewares.errorHandler);
+app.use(errorHandler);
 
 module.exports = app;
